@@ -21,7 +21,9 @@ import {
     FileText,
     Layout,
     Type,
-    Save
+    Save,
+    ChevronRight,
+    Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -139,39 +141,60 @@ export default function NewCampaignPage() {
                 </TabsContent>
 
                 <TabsContent value="content">
-                    <Card className="border-none shadow-md">
-                        <CardHeader className="flex flex-row items-center justify-between">
+                    <Card className="border-none shadow-md overflow-hidden">
+                        <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
                             <div>
                                 <div className="flex items-center gap-2">
                                     <Layout className="h-5 w-5 text-primary" />
                                     <CardTitle>Editor de Conteúdo</CardTitle>
                                 </div>
-                                <CardDescription>Crie o visual do seu e-mail.</CardDescription>
+                                <CardDescription>Crie o visual do seu e-mail com suporte a HTML simples.</CardDescription>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                    <Type className="mr-2 h-4 w-4" />
-                                    Texto Simples
-                                </Button>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="rounded-full">
                                     <FileText className="mr-2 h-4 w-4" />
                                     Templates
                                 </Button>
                             </div>
                         </CardHeader>
-                        <CardContent className="min-h-[400px]">
-                            <div className="rounded-lg border bg-muted/10 p-4">
-                                <textarea
-                                    className="min-h-[350px] w-full resize-none border-none bg-transparent focus:ring-0"
-                                    placeholder="Escreva seu e-mail aqui ou use um template..."
-                                    value={campaign.content}
-                                    onChange={(e) => setCampaign({ ...campaign, content: e.target.value })}
-                                />
+                        <CardContent className="p-0">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
+                                {/* Editor Pane */}
+                                <div className="border-r flex flex-col">
+                                    <div className="flex bg-muted/20 p-2 gap-1 border-b">
+                                        <Button variant="ghost" size="sm" className="h-8 px-2 font-bold" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<b></b>' })}>B</Button>
+                                        <Button variant="ghost" size="sm" className="h-8 px-2 italic" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<i></i>' })}>I</Button>
+                                        <Button variant="ghost" size="sm" className="h-8 px-2 underline" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<u></u>' })}>U</Button>
+                                        <div className="w-px h-6 bg-border mx-1 my-auto" />
+                                        <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<a href=""></a>' })}>link</Button>
+                                    </div>
+                                    <textarea
+                                        className="flex-1 w-full p-6 resize-none border-none bg-transparent focus:ring-0 font-mono text-sm leading-relaxed"
+                                        placeholder="Use tags HTML para formatação..."
+                                        value={campaign.content}
+                                        onChange={(e) => setCampaign({ ...campaign, content: e.target.value })}
+                                    />
+                                </div>
+                                {/* Preview Pane */}
+                                <div className="bg-muted/5 p-8 flex flex-col">
+                                    <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-4">Preview em tempo real</p>
+                                    <div className="flex-1 rounded-xl border bg-white shadow-inner p-8 dark:bg-zinc-950 overflow-auto">
+                                        <div
+                                            className="max-w-prose mx-auto prose prose-sm dark:prose-invert"
+                                            dangerouslySetInnerHTML={{
+                                                __html: campaign.content || '<p class="text-zinc-400 italic">O conteúdo aparecerá aqui...</p>'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex justify-between border-t bg-muted/5 px-6 py-4">
                             <Button variant="ghost" onClick={() => setStep('settings')}>Voltar</Button>
-                            <Button onClick={() => setStep('preview')}>Revisar e Enviar</Button>
+                            <Button onClick={() => setStep('preview')} className="gap-2">
+                                Próximo: Revisar
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
                         </CardFooter>
                     </Card>
                 </TabsContent>
