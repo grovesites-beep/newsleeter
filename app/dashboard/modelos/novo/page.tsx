@@ -102,11 +102,11 @@ export default function NewTemplatePage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 min-h-[400px]">
                             {/* Editor */}
                             <div className="border-r">
-                                <textarea
-                                    className="w-full h-full p-6 resize-none border-none bg-transparent focus:ring-0 font-mono text-sm"
+                                <Textarea
+                                    className="w-full h-full p-6 resize-none border-none bg-transparent focus-visible:ring-0 font-mono text-sm min-h-[400px]"
                                     placeholder="<div><h1>Olá {{nome}}</h1>...</div>"
                                     value={template.content}
-                                    onChange={(e) => setTemplate({ ...template, content: e.target.value })}
+                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTemplate({ ...template, content: e.target.value })}
                                     required
                                 />
                             </div>
