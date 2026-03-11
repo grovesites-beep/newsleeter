@@ -5,6 +5,7 @@ const DATABASE_ID = 'default'; // Adjust if using specific ID
 const CONTACTS_COLLECTION_ID = 'contacts';
 const SEGMENTS_COLLECTION_ID = 'segments';
 const USERS_COLLECTION_ID = 'users';
+const ACTIVITY_LOGS_COLLECTION_ID = 'activity_logs';
 
 export interface Contact extends Models.Document {
     name: string;
@@ -27,6 +28,15 @@ export interface UserProfile extends Models.Document {
     role: 'admin' | 'editor' | 'viewer';
     avatar?: string;
     status: 'active' | 'pending';
+}
+
+export interface ActivityLog extends Models.Document {
+    eventId: string;
+    type: 'open' | 'click' | 'unsubscribe' | 'campaign_start' | 'campaign_end';
+    contactId?: string;
+    campaignId?: string;
+    metadata?: string; // JSON string
+    timestamp: string;
 }
 
 export const dbService = {
@@ -63,5 +73,10 @@ export const dbService = {
 
     async updateUserRole(documentId: string, role: UserProfile['role']) {
         return await databases.updateDocument<UserProfile>(DATABASE_ID, USERS_COLLECTION_ID, documentId, { role });
+    },
+
+    // Logs
+    async getLogs(queries: string[] = []) {
+        return await databases.listDocuments<ActivityLog>(DATABASE_ID, ACTIVITY_LOGS_COLLECTION_ID, queries);
     }
 };

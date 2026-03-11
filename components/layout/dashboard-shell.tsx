@@ -15,7 +15,8 @@ import {
     Search,
     Bell,
     Menu,
-    Zap
+    Zap,
+    History
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
@@ -48,6 +49,7 @@ const navigation = [
     { name: 'Automações', href: '/dashboard/automations', icon: Zap },
     { name: 'Templates', href: '/dashboard/templates', icon: FileText },
     { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3 },
+    { name: 'Logs de Atividade', href: '/dashboard/logs', icon: History },
 ];
 
 const secondaryNavigation = [
