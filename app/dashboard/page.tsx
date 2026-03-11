@@ -27,17 +27,17 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Olá, {user?.name?.split(' ')[0]}!</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">Olá, {user?.name ? user.name.split(' ')[0] : 'Usuário'}!</h1>
                     <p className="text-muted-foreground">
                         Aqui está o que está acontecendo com sua newsletter hoje.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button asChild variant="outline">
-                        <Link href="/campaigns/new">Agendar Campanha</Link>
+                        <Link href="/dashboard/campaigns/new">Agendar Campanha</Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/campaigns/new">Nova Campanha</Link>
+                        <Link href="/dashboard/campaigns/new">Nova Campanha</Link>
                     </Button>
                 </div>
             </div>
