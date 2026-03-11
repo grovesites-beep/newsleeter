@@ -30,10 +30,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
 export default function ContactsPage() {
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // New Contact State
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newContact, setNewContact] = useState({ name: '', email: '', tags: '' });
+
+    // CSV State
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [csvFile, setCsvFile] = useState<File | null>(null);
 
     useEffect(() => {
         loadContacts();
@@ -46,11 +65,67 @@ export default function ContactsPage() {
             setContacts(response.documents);
         } catch (error) {
             console.error('Falha ao carregar contatos:', error);
-            // Non-blocking toast as it might be first setup
             toast.info('Nenhum contato encontrado ou erro de conexão.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleAddContact = async () => {
+        if (!newContact.name || !newContact.email) {
+            toast.error('Preencha pelo menos nome e e-mail.');
+            return;
+        }
+
+        try {
+            await dbService.createContact({
+                name: newContact.name,
+                email: newContact.email,
+                tags: newContact.tags ? newContact.tags.split(',').map(t => t.trim()) : [],
+                status: 'active'
+            });
+            toast.success('Contato adicionado com sucesso!');
+            setIsAddModalOpen(false);
+            setNewContact({ name: '', email: '', tags: '' });
+            loadContacts();
+        } catch (error) {
+            toast.error('Erro ao salvar contato.');
+        }
+    };
+
+    const handleCsvImport = async () => {
+        if (!csvFile) return;
+
+        toast.promise(
+            new Promise(async (resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const text = e.target?.result as string;
+                    const lines = text.split('\n');
+                    // Simple CSV Parser (assuming Name, Email format)
+                    for (let i = 1; i < lines.length; i++) {
+                        const [name, email] = lines[i].split(',');
+                        if (name && email) {
+                            await dbService.createContact({
+                                name: name.trim(),
+                                email: email.trim(),
+                                tags: ['import-csv'],
+                                status: 'active'
+                            });
+                        }
+                    }
+                    resolve(true);
+                    setIsImportModalOpen(false);
+                    loadContacts();
+                };
+                reader.readAsText(csvFile);
+            }),
+            {
+                loading: 'Importando contatos...',
+                success: 'Contatos importados com sucesso!',
+                error: 'Erro na importação.',
+            }
+        );
     };
 
     const filteredContacts = contacts.filter(c =>
@@ -77,18 +152,74 @@ export default function ContactsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Importar CSV
-                    </Button>
+                    {/* Import CSV Dialog */}
+                    <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                                <Upload className="mr-2 h-4 w-4" />
+                                Importar CSV
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Importar Contatos</DialogTitle>
+                                <DialogDescription>
+                                    Envie um arquivo CSV com as colunas Nome e E-mail.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="grid w-full items-center gap-1.5">
+                                    <Label htmlFor="csv">Arquivo CSV</Label>
+                                    <Input id="csv" type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleCsvImport} disabled={!csvFile}>Começar Importação</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
                     <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
                         Exportar
                     </Button>
-                    <Button size="sm">
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Novo Contato
-                    </Button>
+
+                    {/* New Contact Dialog */}
+                    <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                        <DialogTrigger asChild>
+                            <Button size="sm" className="rounded-full shadow-lg">
+                                <UserPlus className="mr-2 h-4 w-4" />
+                                Novo Contato
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Adicionar Contato</DialogTitle>
+                                <DialogDescription>
+                                    Insira os dados manualmente para sua base.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Nome Completo</Label>
+                                    <Input id="name" value={newContact.name} onChange={(e) => setNewContact({ ...newContact, name: e.target.value })} placeholder="João Silva" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">E-mail</Label>
+                                    <Input id="email" type="email" value={newContact.email} onChange={(e) => setNewContact({ ...newContact, email: e.target.value })} placeholder="joao@exemplo.com" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="tags">Tags (separadas por vírgula)</Label>
+                                    <Input id="tags" value={newContact.tags} onChange={(e) => setNewContact({ ...newContact, tags: e.target.value })} placeholder="cliente, leads-2024" />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancelar</Button>
+                                <Button onClick={handleAddContact}>Salvar Contato</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
@@ -97,12 +228,12 @@ export default function ContactsPage() {
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         placeholder="Buscar por nome ou email..."
-                        className="pl-9"
+                        className="pl-9 h-10 rounded-full"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="rounded-full h-10 w-10">
                     <Filter className="h-4 w-4" />
                 </Button>
             </div>
