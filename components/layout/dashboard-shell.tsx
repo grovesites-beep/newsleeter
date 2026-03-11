@@ -14,7 +14,8 @@ import {
     ChevronRight,
     Search,
     Bell,
-    Menu
+    Menu,
+    Zap
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { usePathname } from 'next/navigation';
@@ -37,19 +38,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Contatos', href: '/contacts', icon: Users },
-    { name: 'Segmentos', href: '/segments', icon: Filter },
-    { name: 'Campanhas', href: '/campaigns', icon: Mail },
-    { name: 'Templates', href: '/templates', icon: FileText },
-    { name: 'Relatórios', href: '/reports', icon: BarChart3 },
+    { name: 'Contatos', href: '/dashboard/contacts', icon: Users },
+    { name: 'Segmentos', href: '/dashboard/segments', icon: Filter },
+    { name: 'Campanhas', href: '/dashboard/campaigns', icon: Mail },
+    { name: 'Automações', href: '/dashboard/automations', icon: Zap },
+    { name: 'Templates', href: '/dashboard/templates', icon: FileText },
+    { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3 },
 ];
 
 const secondaryNavigation = [
-    { name: 'Usuários', href: '/users', icon: UserCog },
-    { name: 'Configurações', href: '/settings', icon: Settings },
+    { name: 'Usuários', href: '/dashboard/users', icon: UserCog },
+    { name: 'Configurações', href: '/dashboard/settings', icon: Settings },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
