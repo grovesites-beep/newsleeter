@@ -19,7 +19,8 @@ import {
     Upload,
     MoreHorizontal,
     UserPlus,
-    Filter
+    Filter,
+    Star
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -40,6 +41,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function ContactsPage() {
     const [contacts, setContacts] = useState<Contact[]>([]);
@@ -152,33 +154,19 @@ export default function ContactsPage() {
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Import CSV Dialog */}
-                    <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                <Upload className="mr-2 h-4 w-4" />
-                                Importar CSV
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Importar Contatos</DialogTitle>
-                                <DialogDescription>
-                                    Envie um arquivo CSV com as colunas Nome e E-mail.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="grid w-full items-center gap-1.5">
-                                    <Label htmlFor="csv">Arquivo CSV</Label>
-                                    <Input id="csv" type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} />
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>Cancelar</Button>
-                                <Button onClick={handleCsvImport} disabled={!csvFile}>Começar Importação</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/dashboard/contatos/importar">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Importar Lista
+                        </Link>
+                    </Button>
+
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/dashboard/segmentos">
+                            <Filter className="mr-2 h-4 w-4" />
+                            Segmentos
+                        </Link>
+                    </Button>
 
                     <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
@@ -242,8 +230,9 @@ export default function ContactsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[250px]">Nome</TableHead>
+                            <TableHead className="w-[200px]">Nome</TableHead>
                             <TableHead>Email</TableHead>
+                            <TableHead>Score</TableHead>
                             <TableHead>Tags</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Data Cadastro</TableHead>
@@ -268,6 +257,12 @@ export default function ContactsPage() {
                                 <TableRow key={contact.$id}>
                                     <TableCell className="font-medium">{contact.name}</TableCell>
                                     <TableCell>{contact.email}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-1.5">
+                                            <Star className={`h-3 w-3 ${Number(contact.leadScore || 0) > 50 ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+                                            <span className="text-xs font-bold">{contact.leadScore || 0}</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {contact.tags.map(tag => (

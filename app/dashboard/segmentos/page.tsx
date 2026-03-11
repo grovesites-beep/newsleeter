@@ -1,25 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { dbService, Segment } from '@/services/database/dbService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-    Filter,
-    Plus,
-    MoreVertical,
-    Users,
-    Layers,
-    Trash2,
-    Edit3
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { dbService, Segment } from '@/services/database/dbService';
+import { Plus, Users, Filter, MoreVertical, Trash2, Edit } from 'lucide-react';
+import Link from 'next/link';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from 'sonner';
 
 export default function SegmentsPage() {
     const [segments, setSegments] = useState<Segment[]>([]);
@@ -30,14 +24,12 @@ export default function SegmentsPage() {
     }, []);
 
     const loadSegments = async () => {
-        setLoading(true);
         try {
             const response = await dbService.getSegments();
             setSegments(response.documents);
         } catch (error) {
-            console.error('Falha ao carregar segmentos:', error);
-            // Non-blocking toast
-            toast.info('Nenhum segmento encontrado.');
+            console.error('Error fetching segments:', error);
+            toast.error('Erro ao carregar segmentos.');
         } finally {
             setLoading(false);
         }
@@ -45,81 +37,76 @@ export default function SegmentsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Segmentos</h1>
-                    <p className="text-muted-foreground">
-                        Crie grupos dinâmicos de contatos baseados em tags, comportamento e atributos.
-                    </p>
+                    <p className="text-muted-foreground">Filtre seus contatos de forma inteligente para envios focados.</p>
                 </div>
-                <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Novo Segmento
+                <Button asChild className="gap-2">
+                    <Link href="/dashboard/segmentos/novo">
+                        <Plus className="h-4 w-4" />
+                        Novo Segmento
+                    </Link>
                 </Button>
             </div>
 
             {loading ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {[1, 2, 3].map((i) => (
-                        <Card key={i} className="animate-pulse border-none shadow-sm">
-                            <CardHeader className="h-24 bg-muted/50"></CardHeader>
-                            <CardContent className="h-20 bg-muted/20"></CardContent>
-                        </Card>
-                    ))}
+                <div className="flex h-64 items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 </div>
             ) : segments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
-                    <div className="rounded-full bg-primary/10 p-4 text-primary">
-                        <Layers className="h-8 w-8" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold">Nenhum segmento ainda</h3>
-                    <p className="mb-6 text-sm text-muted-foreground">
-                        Comece criando um segmento para enviar campanhas segmentadas e personalizadas.
-                    </p>
-                    <Button variant="outline">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Criar primeiro segmento
+                <Card className="border-dashed flex flex-col items-center justify-center p-12 text-center">
+                    <Filter className="h-12 w-12 text-muted-foreground mb-4" />
+                    <CardTitle>Nenhum segmento criado</CardTitle>
+                    <CardDescription className="max-w-xs mt-2">
+                        Crie filtros dinâmicos baseados em tags, comportamento ou campos personalizados.
+                    </CardDescription>
+                    <Button asChild variant="outline" className="mt-6">
+                        <Link href="/dashboard/segmentos/novo">Criar meu primeiro segmento</Link>
                     </Button>
-                </div>
+                </Card>
             ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {segments.map((segment) => (
-                        <Card key={segment.$id} className="border-none shadow-md transition-all hover:shadow-lg">
-                            <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                                <div className="space-y-1">
-                                    <CardTitle className="text-lg">{segment.name}</CardTitle>
-                                    <CardDescription>{segment.description || 'Sem descrição'}</CardDescription>
+                        <Card key={segment.$id} className="border-none shadow-md overflow-hidden hover:ring-1 hover:ring-primary/20 transition-all">
+                            <CardHeader className="pb-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <Users className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem className="gap-2">
+                                                <Edit className="h-4 w-4" /> Editar
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="gap-2 text-destructive">
+                                                <Trash2 className="h-4 w-4" /> Excluir
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                            <Edit3 className="mr-2 h-4 w-4" />
-                                            Editar
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-destructive">
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Excluir
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <CardTitle className="mt-4">{segment.name}</CardTitle>
+                                <CardDescription>{segment.description || 'Sem descrição.'}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <div className="flex items-center text-sm text-muted-foreground">
-                                    <Users className="mr-2 h-4 w-4" />
-                                    <span>Calculando contatos...</span>
+                                <div className="text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Filter className="h-3 w-3" />
+                                        <span className="font-medium">Regras:</span>
+                                    </div>
+                                    <div className="bg-muted/30 p-2 rounded text-[10px] font-mono whitespace-pre-wrap">
+                                        {segment.rules}
+                                    </div>
                                 </div>
                             </CardContent>
-                            <CardFooter className="border-t bg-muted/5 py-3">
-                                <Button variant="link" className="h-auto p-0 text-xs font-medium" asChild>
-                                    <Link href={`/dashboard/contacts?segment=${segment.$id}`}>
-                                        Ver contatos deste segmento
-                                    </Link>
-                                </Button>
+                            <CardFooter className="border-t bg-muted/5 flex justify-between px-6 py-3">
+                                <span className="text-xs text-muted-foreground font-medium">Filtro Ativo</span>
+                                <Button variant="link" size="sm" className="h-auto p-0 text-primary">Ver Contatos</Button>
                             </CardFooter>
                         </Card>
                     ))}
@@ -128,6 +115,3 @@ export default function SegmentsPage() {
         </div>
     );
 }
-
-// Fixed missing import for Link
-import Link from 'next/link';

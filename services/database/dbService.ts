@@ -16,12 +16,40 @@ export interface Contact extends Models.Document {
     phone?: string;
     tags: string[];
     status: 'active' | 'inactive' | 'unsubscribed';
+    metadata?: string; // JSON string for custom fields
+    leadScore?: number;
 }
 
 export interface Segment extends Models.Document {
     name: string;
     description?: string;
-    filters: string; // JSON string of filter logic
+    rules: string; // JSON string of filter logic
+}
+
+export interface Campaign extends Models.Document {
+    name: string;
+    subject: string;
+    preheader?: string;
+    content: string;
+    sender: string;
+    segmentId?: string;
+    status: 'draft' | 'scheduled' | 'sent' | 'sending';
+    scheduledAt?: string;
+    sentDate?: string;
+    stats?: {
+        sent: number;
+        failed: number;
+        opens: number;
+        clicks: number;
+    } | string;
+}
+
+export interface EmailTemplate extends Models.Document {
+    name: string;
+    content: string;
+    description?: string;
+    thumbnail?: string;
+    category?: string;
 }
 
 export interface UserProfile extends Models.Document {
@@ -41,30 +69,6 @@ export interface ActivityLog extends Models.Document {
     timestamp: string;
 }
 
-export interface Campaign extends Models.Document {
-    name: string;
-    subject: string;
-    content: string;
-    sender: string;
-    segmentId?: string;
-    status: 'draft' | 'scheduled' | 'sent' | 'sending';
-    scheduledDate?: string;
-    sentDate?: string;
-    stats?: {
-        opens: number;
-        clicks: number;
-        bounces: number;
-        delivered: number;
-    } | string; // Appwrite might return it as a stringified object if not using maps
-}
-
-export interface EmailTemplate extends Models.Document {
-    name: string;
-    content: string;
-    description?: string;
-    thumbnail?: string;
-}
-
 export const dbService = {
     // Contacts
     async getContacts(queries: string[] = []) {
@@ -73,6 +77,13 @@ export const dbService = {
 
     async createContact(data: Omit<Contact, keyof Models.Document>) {
         return await databases.createDocument<Contact>(DATABASE_ID, CONTACTS_COLLECTION_ID, ID.unique(), data);
+    },
+
+    async bulkCreateContacts(contacts: Omit<Contact, keyof Models.Document>[]) {
+        const promises = contacts.map(contact =>
+            databases.createDocument<Contact>(DATABASE_ID, CONTACTS_COLLECTION_ID, ID.unique(), contact)
+        );
+        return await Promise.all(promises);
     },
 
     async updateContact(documentId: string, data: Partial<Contact>) {
