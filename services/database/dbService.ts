@@ -1,4 +1,4 @@
-import { databases, ID, Query } from '@/lib/appwrite-client';
+import { databases, ID, Query, functions } from '@/lib/appwrite-client';
 import { Models } from 'appwrite';
 
 const DATABASE_ID = 'default'; // Adjust if using specific ID
@@ -103,6 +103,12 @@ export const dbService = {
 
     async deleteCampaign(documentId: string) {
         return await databases.deleteDocument(DATABASE_ID, CAMPAIGNS_COLLECTION_ID, documentId);
+    },
+
+    async sendCampaign(campaignId: string) {
+        // Replace 'send-newsletter' with your actual function ID in Appwrite Console
+        const FUNCTION_ID = 'send-newsletter';
+        return await functions.createExecution(FUNCTION_ID, JSON.stringify({ campaignId }));
     },
 
     // Templates

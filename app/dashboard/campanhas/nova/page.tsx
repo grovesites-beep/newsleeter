@@ -79,6 +79,37 @@ export default function NewCampaignPage() {
         }
     };
 
+    const handleSend = async () => {
+        if (!campaign.name || !campaign.content) {
+            toast.error('Preencha os dados e o conteúdo da campanha.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // 1. Create campaign first
+            const savedCampaign = await dbService.createCampaign({
+                name: campaign.name,
+                subject: campaign.subject,
+                sender: campaign.sender,
+                content: campaign.content,
+                status: 'sending',
+                segmentId: campaign.segmentId
+            });
+
+            // 2. Trigger Function
+            await dbService.sendCampaign(savedCampaign.$id);
+
+            toast.success('Envio iniciado com sucesso!');
+            router.push('/dashboard/campanhas');
+        } catch (error) {
+            console.error('Send error:', error);
+            toast.error('Erro ao iniciar envio.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSave = async () => {
         if (!campaign.name) {
             toast.error('Dê um nome para sua campanha.');
@@ -347,9 +378,13 @@ export default function NewCampaignPage() {
                                     <Calendar className="mr-2 h-4 w-4" />
                                     Agendar
                                 </Button>
-                                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                                <Button
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                    onClick={handleSend}
+                                    disabled={loading}
+                                >
                                     <Send className="mr-2 h-4 w-4" />
-                                    Confirmar Envio
+                                    {loading ? 'Iniciando...' : 'Confirmar Envio'}
                                 </Button>
                             </div>
                         </CardFooter>
