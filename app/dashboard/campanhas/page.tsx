@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { dbService, Campaign } from '@/services/database/dbService';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,33 @@ export default function CampaignsPage() {
         c.subject.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const stats = useMemo(() => {
+        const sent = campaigns.filter(c => c.status === 'sent');
+        const totalSentCount = sent.length;
+
+        let totalOpens = 0;
+        let totalClicks = 0;
+        let totalDelivered = 0;
+
+        sent.forEach(c => {
+            const s = typeof c.stats === 'string' ? JSON.parse(c.stats) : c.stats;
+            if (s) {
+                totalOpens += s.opens || 0;
+                totalClicks += s.clicks || 0;
+                totalDelivered += s.delivered || 0;
+            }
+        });
+
+        const avgOpenRate = totalDelivered > 0 ? (totalOpens / totalDelivered) * 100 : 0;
+        const avgClickRate = totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0;
+
+        return {
+            totalSent: totalSentCount,
+            avgOpenRate: avgOpenRate.toFixed(1) + '%',
+            avgClickRate: avgClickRate.toFixed(1) + '%'
+        };
+    }, [campaigns]);
+
     const getStatusBadge = (status: Campaign['status']) => {
         switch (status) {
             case 'sent':
@@ -98,7 +125,7 @@ export default function CampaignsPage() {
                         <div className="flex items-center justify-between space-x-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Total Enviadas</p>
-                                <h3 className="text-3xl font-bold mt-1">12</h3>
+                                <h3 className="text-3xl font-bold mt-1">{stats.totalSent}</h3>
                             </div>
                             <div className="p-3 bg-primary/10 rounded-2xl text-primary">
                                 <Send className="h-6 w-6" />
@@ -111,7 +138,7 @@ export default function CampaignsPage() {
                         <div className="flex items-center justify-between space-x-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Média de Abertura</p>
-                                <h3 className="text-3xl font-bold mt-1">32.4%</h3>
+                                <h3 className="text-3xl font-bold mt-1">{stats.avgOpenRate}</h3>
                             </div>
                             <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500">
                                 <Eye className="h-6 w-6" />
@@ -124,7 +151,7 @@ export default function CampaignsPage() {
                         <div className="flex items-center justify-between space-x-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Média de Cliques</p>
-                                <h3 className="text-3xl font-bold mt-1">5.8%</h3>
+                                <h3 className="text-3xl font-bold mt-1">{stats.avgClickRate}</h3>
                             </div>
                             <div className="p-3 bg-green-500/10 rounded-2xl text-green-500">
                                 <MousePointer2 className="h-6 w-6" />
@@ -195,18 +222,21 @@ export default function CampaignsPage() {
                                     </div>
 
                                     <div className="flex items-center justify-between gap-8 md:justify-end">
-                                        {campaign.status === 'sent' && campaign.stats && (
-                                            <div className="flex gap-6">
-                                                <div className="text-center group-hover:scale-105 transition-transform">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Abertos</p>
-                                                    <p className="text-sm font-extrabold">{campaign.stats.opens}</p>
+                                        {campaign.status === 'sent' && campaign.stats && (() => {
+                                            const s = typeof campaign.stats === 'string' ? JSON.parse(campaign.stats) : campaign.stats;
+                                            return (
+                                                <div className="flex gap-6">
+                                                    <div className="text-center group-hover:scale-105 transition-transform">
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Abertos</p>
+                                                        <p className="text-sm font-extrabold">{s.opens || 0}</p>
+                                                    </div>
+                                                    <div className="text-center group-hover:scale-105 transition-transform delay-75">
+                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cliques</p>
+                                                        <p className="text-sm font-extrabold">{s.clicks || 0}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-center group-hover:scale-105 transition-transform delay-75">
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cliques</p>
-                                                    <p className="text-sm font-extrabold">{campaign.stats.clicks}</p>
-                                                </div>
-                                            </div>
-                                        )}
+                                            );
+                                        })()}
                                         <div className="flex items-center gap-2">
                                             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group-hover:bg-background shadow-none transition-all">
                                                 <BarChart3 className="h-4 w-4" />

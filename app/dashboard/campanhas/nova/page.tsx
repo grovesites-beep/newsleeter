@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { dbService, EmailTemplate } from '@/services/database/dbService';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,18 +52,54 @@ const templates = [
 ];
 
 export default function NewCampaignPage() {
+    const router = useRouter();
     const [step, setStep] = useState('settings');
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+    const [loading, setLoading] = useState(false);
     const [campaign, setCampaign] = useState({
         name: '',
         subject: '',
         sender: '',
-        segment: '',
+        segmentId: '',
         content: ''
     });
 
-    const handleSave = () => {
-        toast.success('Campanha salva como rascunho!');
+    useEffect(() => {
+        loadTemplates();
+    }, []);
+
+    const loadTemplates = async () => {
+        try {
+            const response = await dbService.getTemplates();
+            setTemplates(response.documents);
+        } catch (error) {
+            console.error('Error loading templates:', error);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!campaign.name) {
+            toast.error('Dê um nome para sua campanha.');
+            return;
+        }
+        setLoading(true);
+        try {
+            await dbService.createCampaign({
+                name: campaign.name,
+                subject: campaign.subject,
+                sender: campaign.sender,
+                content: campaign.content,
+                status: 'draft',
+                segmentId: campaign.segmentId
+            });
+            toast.success('Campanha salva como rascunho!');
+            router.push('/dashboard/campanhas');
+        } catch (error) {
+            toast.error('Erro ao salvar rascunho.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const applyTemplate = (content: string) => {
@@ -78,11 +116,11 @@ export default function NewCampaignPage() {
                     <p className="text-muted-foreground">Configure os detalhes e o conteúdo da sua mensagem.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleSave}>
+                    <Button variant="outline" onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        Salvar Rascunho
+                        {loading ? 'Salvando...' : 'Salvar Rascunho'}
                     </Button>
-                    <Button>
+                    <Button disabled={loading}>
                         <Send className="mr-2 h-4 w-4" />
                         Enviar Agora
                     </Button>
@@ -146,8 +184,8 @@ export default function NewCampaignPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="segment">Público (Segmento)</Label>
                                     <Select
-                                        value={campaign.segment}
-                                        onValueChange={(v) => setCampaign({ ...campaign, segment: v })}
+                                        value={campaign.segmentId}
+                                        onValueChange={(v) => setCampaign({ ...campaign, segmentId: v })}
                                     >
                                         <SelectTrigger id="segment">
                                             <SelectValue placeholder="Para quem enviar?" />
@@ -195,19 +233,25 @@ export default function NewCampaignPage() {
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-                                            {templates.map((t) => (
-                                                <div
-                                                    key={t.id}
-                                                    className="group cursor-pointer rounded-xl border p-4 hover:border-primary hover:bg-primary/5 transition-all"
-                                                    onClick={() => applyTemplate(t.content)}
-                                                >
-                                                    <div className="aspect-video w-full rounded-lg bg-muted flex items-center justify-center mb-3">
-                                                        <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                    </div>
-                                                    <h4 className="font-bold">{t.name}</h4>
-                                                    <p className="text-xs text-muted-foreground">Clique para aplicar este design ao seu editor.</p>
+                                            {templates.length === 0 ? (
+                                                <div className="col-span-2 py-10 text-center text-muted-foreground">
+                                                    Nenhum template encontrado. Crie um na aba Modelos.
                                                 </div>
-                                            ))}
+                                            ) : (
+                                                templates.map((t) => (
+                                                    <div
+                                                        key={t.$id}
+                                                        className="group cursor-pointer rounded-xl border p-4 hover:border-primary hover:bg-primary/5 transition-all"
+                                                        onClick={() => applyTemplate(t.content)}
+                                                    >
+                                                        <div className="aspect-video w-full rounded-lg bg-muted flex items-center justify-center mb-3">
+                                                            <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                        </div>
+                                                        <h4 className="font-bold">{t.name}</h4>
+                                                        <p className="text-xs text-muted-foreground">{t.description || 'Clique para aplicar este design.'}</p>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </DialogContent>
                                 </Dialog>

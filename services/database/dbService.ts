@@ -6,6 +6,8 @@ const CONTACTS_COLLECTION_ID = 'contacts';
 const SEGMENTS_COLLECTION_ID = 'segments';
 const USERS_COLLECTION_ID = 'users';
 const ACTIVITY_LOGS_COLLECTION_ID = 'activity_logs';
+const CAMPAIGNS_COLLECTION_ID = 'campaigns';
+const TEMPLATES_COLLECTION_ID = 'templates';
 
 export interface Contact extends Models.Document {
     name: string;
@@ -44,6 +46,7 @@ export interface Campaign extends Models.Document {
     subject: string;
     content: string;
     sender: string;
+    segmentId?: string;
     status: 'draft' | 'scheduled' | 'sent' | 'sending';
     scheduledDate?: string;
     sentDate?: string;
@@ -52,7 +55,14 @@ export interface Campaign extends Models.Document {
         clicks: number;
         bounces: number;
         delivered: number;
-    };
+    } | string; // Appwrite might return it as a stringified object if not using maps
+}
+
+export interface EmailTemplate extends Models.Document {
+    name: string;
+    content: string;
+    description?: string;
+    thumbnail?: string;
 }
 
 export const dbService = {
@@ -74,41 +84,47 @@ export const dbService = {
     },
 
     // Campaigns
-    async getCampaigns() {
-        // Mock data for UI development
-        const mockCampaigns: Campaign[] = [
-            {
-                $id: '1',
-                name: 'Newsletter Março 2024',
-                subject: 'Novidades Incríveis!',
-                content: '<h1>Conteúdo</h1>',
-                sender: 'contato@grovehub.com.br',
-                status: 'sent',
-                sentDate: new Date().toISOString(),
-                stats: { opens: 425, clicks: 89, bounces: 2, delivered: 1240 },
-                $createdAt: new Date().toISOString(),
-                $updatedAt: new Date().toISOString(),
-                $permissions: [],
-                $databaseId: 'default',
-                $collectionId: 'campaigns',
-                $sequence: 1
-            },
-            {
-                $id: '2',
-                name: 'Promoção Relâmpago',
-                subject: 'Só hoje: 50% de desconto',
-                content: '<h1>Conteúdo</h1>',
-                sender: 'news@newsletter.grovehost.com.br',
-                status: 'draft',
-                $createdAt: new Date().toISOString(),
-                $updatedAt: new Date().toISOString(),
-                $permissions: [],
-                $databaseId: 'default',
-                $collectionId: 'campaigns',
-                $sequence: 2
-            }
-        ];
-        return { documents: mockCampaigns, total: mockCampaigns.length };
+    async getCampaigns(queries: string[] = []) {
+        try {
+            return await databases.listDocuments<Campaign>(DATABASE_ID, CAMPAIGNS_COLLECTION_ID, queries);
+        } catch (error) {
+            console.error('Error fetching campaigns:', error);
+            return { documents: [], total: 0 };
+        }
+    },
+
+    async createCampaign(data: Omit<Campaign, keyof Models.Document>) {
+        return await databases.createDocument<Campaign>(DATABASE_ID, CAMPAIGNS_COLLECTION_ID, ID.unique(), data);
+    },
+
+    async updateCampaign(documentId: string, data: Partial<Campaign>) {
+        return await databases.updateDocument<Campaign>(DATABASE_ID, CAMPAIGNS_COLLECTION_ID, documentId, data);
+    },
+
+    async deleteCampaign(documentId: string) {
+        return await databases.deleteDocument(DATABASE_ID, CAMPAIGNS_COLLECTION_ID, documentId);
+    },
+
+    // Templates
+    async getTemplates(queries: string[] = []) {
+        try {
+            return await databases.listDocuments<EmailTemplate>(DATABASE_ID, TEMPLATES_COLLECTION_ID, queries);
+        } catch (error) {
+            console.error('Error fetching templates:', error);
+            return { documents: [], total: 0 };
+        }
+    },
+
+    async createTemplate(data: Omit<EmailTemplate, keyof Models.Document>) {
+        return await databases.createDocument<EmailTemplate>(DATABASE_ID, TEMPLATES_COLLECTION_ID, ID.unique(), data);
+    },
+
+    async updateTemplate(documentId: string, data: Partial<EmailTemplate>) {
+        return await databases.updateDocument<EmailTemplate>(DATABASE_ID, TEMPLATES_COLLECTION_ID, documentId, data);
+    },
+
+    async deleteTemplate(documentId: string) {
+        return await databases.deleteDocument(DATABASE_ID, TEMPLATES_COLLECTION_ID, documentId);
     },
 
     // Segments
