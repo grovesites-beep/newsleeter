@@ -39,6 +39,22 @@ export interface ActivityLog extends Models.Document {
     timestamp: string;
 }
 
+export interface Campaign extends Models.Document {
+    name: string;
+    subject: string;
+    content: string;
+    sender: string;
+    status: 'draft' | 'scheduled' | 'sent' | 'sending';
+    scheduledDate?: string;
+    sentDate?: string;
+    stats?: {
+        opens: number;
+        clicks: number;
+        bounces: number;
+        delivered: number;
+    };
+}
+
 export const dbService = {
     // Contacts
     async getContacts(queries: string[] = []) {
@@ -55,6 +71,44 @@ export const dbService = {
 
     async deleteContact(documentId: string) {
         return await databases.deleteDocument(DATABASE_ID, CONTACTS_COLLECTION_ID, documentId);
+    },
+
+    // Campaigns
+    async getCampaigns() {
+        // Mock data for UI development
+        const mockCampaigns: Campaign[] = [
+            {
+                $id: '1',
+                name: 'Newsletter Março 2024',
+                subject: 'Novidades Incríveis!',
+                content: '<h1>Conteúdo</h1>',
+                sender: 'contato@grovehub.com.br',
+                status: 'sent',
+                sentDate: new Date().toISOString(),
+                stats: { opens: 425, clicks: 89, bounces: 2, delivered: 1240 },
+                $createdAt: new Date().toISOString(),
+                $updatedAt: new Date().toISOString(),
+                $permissions: [],
+                $databaseId: 'default',
+                $collectionId: 'campaigns',
+                $sequence: 1
+            },
+            {
+                $id: '2',
+                name: 'Promoção Relâmpago',
+                subject: 'Só hoje: 50% de desconto',
+                content: '<h1>Conteúdo</h1>',
+                sender: 'news@newsletter.grovehost.com.br',
+                status: 'draft',
+                $createdAt: new Date().toISOString(),
+                $updatedAt: new Date().toISOString(),
+                $permissions: [],
+                $databaseId: 'default',
+                $collectionId: 'campaigns',
+                $sequence: 2
+            }
+        ];
+        return { documents: mockCampaigns, total: mockCampaigns.length };
     },
 
     // Segments
