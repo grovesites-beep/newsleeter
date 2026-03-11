@@ -46,14 +46,14 @@ const navigation = [
     { name: 'Contatos', href: '/dashboard/contatos', icon: Users },
     { name: 'Segmentos', href: '/dashboard/segmentos', icon: Filter },
     { name: 'Campanhas', href: '/dashboard/campanhas', icon: Mail },
-    { name: 'Automações', href: '/dashboard/automacoes', icon: Zap },
+    { name: 'Biblioteca', href: '/dashboard/biblioteca', icon: Zap }, // Feature 20
     { name: 'Templates', href: '/dashboard/modelos', icon: FileText },
     { name: 'Relatórios', href: '/dashboard/relatorios', icon: BarChart3 },
     { name: 'Logs de Atividade', href: '/dashboard/atividades', icon: History },
 ];
 
 const secondaryNavigation = [
-    { name: 'Usuários', href: '/dashboard/usuarios', icon: UserCog },
+    { name: 'Equipe', href: '/dashboard/configuracoes', icon: UserCog }, // Point to the new settings
     { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
 ];
 
@@ -63,10 +63,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
     const getInitials = (name: string) => {
         return name
-            .split(' ')
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase();
+            ? name.split(' ').map((n) => n[0]).join('').toUpperCase()
+            : 'U';
     };
 
     return (
@@ -149,7 +147,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                             <DropdownMenuContent side="right" align="end" className="w-56">
                                 <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>Perfil</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/dashboard/configuracoes">Perfil</Link></DropdownMenuItem>
                                 <DropdownMenuItem>Faturamento</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => logout()} className="text-destructive">
@@ -174,10 +172,38 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <Button variant="ghost" size="icon" className="relative">
-                                <Bell className="h-5 w-5" />
-                                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive"></span>
-                            </Button>
+                            {/* Feature 23: Dashboard Notifications */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="relative">
+                                        <Bell className="h-5 w-5" />
+                                        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive"></span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-80">
+                                    <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <div className="p-4 space-y-4">
+                                        <div className="flex gap-3">
+                                            <div className="h-2 w-2 mt-1.5 rounded-full bg-blue-500 shrink-0" />
+                                            <div>
+                                                <p className="text-xs font-bold">Relatório exportado</p>
+                                                <p className="text-[10px] text-muted-foreground">Sua lista de contatos está pronta!</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <div className="h-2 w-2 mt-1.5 rounded-full bg-green-500 shrink-0" />
+                                            <div>
+                                                <p className="text-xs font-bold">Campanha Finalizada</p>
+                                                <p className="text-[10px] text-muted-foreground">"Newsletter Semanal" enviada para 450 contatos.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="justify-center text-xs text-primary font-bold">Ver tudo</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             <Avatar className="h-8 w-8 cursor-pointer border">
                                 <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
                             </Avatar>

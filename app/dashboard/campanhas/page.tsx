@@ -238,8 +238,10 @@ export default function CampaignsPage() {
                                             );
                                         })()}
                                         <div className="flex items-center gap-2">
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group-hover:bg-background shadow-none transition-all">
-                                                <BarChart3 className="h-4 w-4" />
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full group-hover:bg-background shadow-none transition-all" asChild>
+                                                <Link href={`/dashboard/campanhas/${campaign.$id}/relatorio`}>
+                                                    <BarChart3 className="h-4 w-4" />
+                                                </Link>
                                             </Button>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

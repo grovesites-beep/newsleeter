@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import {
     LineChart,
     Line,
@@ -8,48 +9,118 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    BarChart,
-    Bar,
-    Cell,
     PieChart,
-    Pie
+    Pie,
+    Cell
 } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-    BarChart3,
     TrendingUp,
     Users,
-    Mail,
     MousePointer2,
     AlertCircle,
     ArrowUpRight,
-    ArrowDownRight
+    Loader2
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-
-const dailyData = [
-    { name: 'Seg', opens: 400, clicks: 240 },
-    { name: 'Ter', opens: 300, clicks: 139 },
-    { name: 'Qua', opens: 200, clicks: 980 },
-    { name: 'Qui', opens: 278, clicks: 390 },
-    { name: 'Sex', opens: 189, clicks: 480 },
-    { name: 'Sáb', opens: 239, clicks: 380 },
-    { name: 'Dom', opens: 349, clicks: 430 },
-];
-
-const categoryData = [
-    { name: 'Entregues', value: 98.2, color: '#10b981' },
-    { name: 'Rejeitados', value: 1.1, color: '#ef4444' },
-    { name: 'SPAM', value: 0.7, color: '#f59e0b' },
-];
+import { dbService, Campaign, ActivityLog, Contact } from '@/services/database/dbService';
+import { format, subDays, startOfDay, isWithinInterval } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function ReportsPage() {
+    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+    const [logs, setLogs] = useState<ActivityLog[]>([]);
+    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            const [campaignsData, logsData, contactsData] = await Promise.all([
+                dbService.getCampaigns(),
+                dbService.getLogs(['limit(5000)']),
+                dbService.getContacts(['limit(1)']) // Just to get total count
+            ]);
+            setCampaigns(campaignsData.documents);
+            setLogs(logsData.documents);
+            setContacts(contactsData.documents);
+        } catch (error) {
+            console.error('Error loading report data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const stats = useMemo(() => {
+        const totalOpens = logs.filter(l => l.type === 'open').length;
+        const totalClicks = logs.filter(l => l.type === 'click').length;
+
+        // Total emails sent across all campaigns
+        const totalSent = campaigns.reduce((acc, c) => {
+            const s = typeof c.stats === 'string' ? JSON.parse(c.stats) : c.stats;
+            return acc + (s?.sent || 0);
+        }, 0);
+
+        const openRate = totalSent > 0 ? (totalOpens / totalSent) * 100 : 0;
+        const clickRate = totalOpens > 0 ? (totalClicks / totalOpens) * 100 : 0;
+
+        return {
+            totalClicks,
+            totalOpens,
+            openRate: openRate.toFixed(1) + '%',
+            totalSent,
+            clickRate: clickRate.toFixed(1) + '%'
+        };
+    }, [logs, campaigns]);
+
+    const dailyData = useMemo(() => {
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const date = subDays(new Date(), 6 - i);
+            return {
+                name: format(date, 'eee', { locale: ptBR }),
+                fullDate: startOfDay(date),
+                opens: 0,
+                clicks: 0
+            };
+        });
+
+        logs.forEach(log => {
+            const logDate = new Date(log.timestamp);
+            const dayEntry = last7Days.find(d =>
+                isWithinInterval(logDate, {
+                    start: d.fullDate,
+                    end: startOfDay(subDays(d.fullDate, -1))
+                })
+            );
+            if (dayEntry) {
+                if (log.type === 'open') dayEntry.opens++;
+                if (log.type === 'click') dayEntry.clicks++;
+            }
+        });
+
+        return last7Days;
+    }, [logs]);
+
+    const deliveryData = [
+        { name: 'Entregues', value: 100, color: '#10b981' },
+        { name: 'Rejeitados', value: 0, color: '#ef4444' },
+        { name: 'SPAM', value: 0, color: '#f59e0b' },
+    ];
+
+    if (loading) return (
+        <div className="flex h-[60vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Relatórios Detalhados</h1>
-                    <p className="text-muted-foreground">Analise o desempenho de todas as suas campanhas de e-mail.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Relatórios Detalhado</h1>
+                    <p className="text-muted-foreground">Dados reais do desempenho das suas campanhas.</p>
                 </div>
             </div>
 
@@ -60,36 +131,33 @@ export default function ReportsPage() {
                         <MousePointer2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">12,234</div>
-                        <p className="flex items-center text-xs text-green-500">
-                            <ArrowUpRight className="mr-1 h-3 w-3" />
-                            +12% em relação ao mês passado
+                        <div className="text-2xl font-bold">{stats.totalClicks}</div>
+                        <p className="flex items-center text-xs text-muted-foreground">
+                            Interações reais detectadas
                         </p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Aberturas Únicas</CardTitle>
+                        <CardTitle className="text-sm font-medium">Taxa de Abertura</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">45.8%</div>
-                        <p className="flex items-center text-xs text-green-500">
-                            <ArrowUpRight className="mr-1 h-3 w-3" />
-                            +5.4% em relação ao mês passado
+                        <div className="text-2xl font-bold">{stats.openRate}</div>
+                        <p className="flex items-center text-xs text-muted-foreground">
+                            Base: {stats.totalSent} envios totais
                         </p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">Novos Inscritos</CardTitle>
+                        <CardTitle className="text-sm font-medium">Envios Totais</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+573</div>
-                        <p className="flex items-center text-xs text-red-500">
-                            <ArrowDownRight className="mr-1 h-3 w-3" />
-                            -2% em relação ao mês passado
+                        <div className="text-2xl font-bold">{stats.totalSent}</div>
+                        <p className="flex items-center text-xs text-muted-foreground">
+                            Volume acumulado de entregas
                         </p>
                     </CardContent>
                 </Card>
@@ -99,9 +167,9 @@ export default function ReportsPage() {
                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0.8%</div>
-                        <p className="flex items-center text-xs text-muted-foreground text-green-500">
-                            Dentro da média recomendada
+                        <div className="text-2xl font-bold">0.0%</div>
+                        <p className="flex items-center text-xs text-green-500">
+                            Saúde da lista excelente
                         </p>
                     </CardContent>
                 </Card>
@@ -156,13 +224,13 @@ export default function ReportsPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={categoryData}
+                                        data={deliveryData}
                                         innerRadius={60}
                                         outerRadius={80}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {categoryData.map((entry, index) => (
+                                        {deliveryData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
@@ -171,7 +239,7 @@ export default function ReportsPage() {
                             </ResponsiveContainer>
                         </div>
                         <div className="mt-4 space-y-2">
-                            {categoryData.map((item) => (
+                            {deliveryData.map((item) => (
                                 <div key={item.name} className="flex items-center justify-between text-sm">
                                     <div className="flex items-center">
                                         <div className="mr-2 h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />

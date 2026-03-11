@@ -165,5 +165,27 @@ export const dbService = {
     // Logs
     async getLogs(queries: string[] = []) {
         return await databases.listDocuments<ActivityLog>(DATABASE_ID, ACTIVITY_LOGS_COLLECTION_ID, queries);
+    },
+
+    // Storage (Image Library - Feature 20)
+    async listFiles(bucketId: string = 'images') {
+        const { storage } = await import('@/lib/appwrite-client');
+        return await storage.listFiles(bucketId);
+    },
+
+    async uploadFile(file: File, bucketId: string = 'images') {
+        const { storage } = await import('@/lib/appwrite-client');
+        return await storage.createFile(bucketId, ID.unique(), file);
+    },
+
+    async deleteFile(fileId: string, bucketId: string = 'images') {
+        const { storage } = await import('@/lib/appwrite-client');
+        return await storage.deleteFile(bucketId, fileId);
+    },
+
+    getFilePreview(fileId: string, bucketId: string = 'images') {
+        const endpoint = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://appwrite.grovehub.com.br/v1';
+        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID;
+        return `${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${projectId}`;
     }
 };

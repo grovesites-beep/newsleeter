@@ -57,17 +57,21 @@ export default function NewCampaignPage() {
     const [step, setStep] = useState('settings');
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+    const [segments, setSegments] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [campaign, setCampaign] = useState({
         name: '',
         subject: '',
-        sender: '',
+        preheader: '',
+        sender: 'contato@grovehub.com.br',
         segmentId: '',
-        content: ''
+        content: '',
+        scheduledAt: ''
     });
 
     useEffect(() => {
         loadTemplates();
+        loadSegments();
     }, []);
 
     const loadTemplates = async () => {
@@ -79,6 +83,15 @@ export default function NewCampaignPage() {
         }
     };
 
+    const loadSegments = async () => {
+        try {
+            const response = await dbService.getSegments();
+            setSegments(response.documents);
+        } catch (error) {
+            console.error('Error loading segments:', error);
+        }
+    };
+
     const handleSend = async () => {
         if (!campaign.name || !campaign.content) {
             toast.error('Preencha os dados e o conteúdo da campanha.');
@@ -87,24 +100,30 @@ export default function NewCampaignPage() {
 
         setLoading(true);
         try {
-            // 1. Create campaign first
+            // 1. Create/Update campaign
             const savedCampaign = await dbService.createCampaign({
                 name: campaign.name,
                 subject: campaign.subject,
+                preheader: campaign.preheader,
                 sender: campaign.sender,
                 content: campaign.content,
-                status: 'sending',
-                segmentId: campaign.segmentId
+                status: campaign.scheduledAt ? 'scheduled' : 'sending',
+                segmentId: campaign.segmentId || 'all',
+                scheduledAt: campaign.scheduledAt
             });
 
-            // 2. Trigger Function
-            await dbService.sendCampaign(savedCampaign.$id);
+            // 2. Trigger Function only if not scheduled
+            if (!campaign.scheduledAt) {
+                await dbService.sendCampaign(savedCampaign.$id);
+                toast.success('Envio iniciado com sucesso!');
+            } else {
+                toast.success('Campanha agendada com sucesso!');
+            }
 
-            toast.success('Envio iniciado com sucesso!');
             router.push('/dashboard/campanhas');
         } catch (error) {
             console.error('Send error:', error);
-            toast.error('Erro ao iniciar envio.');
+            toast.error('Erro ao processar campanha.');
         } finally {
             setLoading(false);
         }
@@ -120,10 +139,12 @@ export default function NewCampaignPage() {
             await dbService.createCampaign({
                 name: campaign.name,
                 subject: campaign.subject,
+                preheader: campaign.preheader,
                 sender: campaign.sender,
                 content: campaign.content,
                 status: 'draft',
-                segmentId: campaign.segmentId
+                segmentId: campaign.segmentId,
+                scheduledAt: campaign.scheduledAt
             });
             toast.success('Campanha salva como rascunho!');
             router.push('/dashboard/campanhas');
@@ -199,6 +220,27 @@ export default function NewCampaignPage() {
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
+                                    <Label htmlFor="preheader">Texto de Pré-visualização (Preheader)</Label>
+                                    <Input
+                                        id="preheader"
+                                        placeholder="Snippet que aparece após o assunto"
+                                        value={campaign.preheader}
+                                        onChange={(e) => setCampaign({ ...campaign, preheader: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="scheduledAt">Agendar Envio (Opcional)</Label>
+                                    <Input
+                                        id="scheduledAt"
+                                        type="datetime-local"
+                                        value={campaign.scheduledAt}
+                                        onChange={(e) => setCampaign({ ...campaign, scheduledAt: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
                                     <Label htmlFor="sender">Remetente</Label>
                                     <Select
                                         value={campaign.sender}
@@ -208,8 +250,8 @@ export default function NewCampaignPage() {
                                             <SelectValue placeholder="Selecione o domínio de envio" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="default">contato@grovehub.com.br</SelectItem>
-                                            <SelectItem value="news">news@newsletter.grovehost.com.br</SelectItem>
+                                            <SelectItem value="contato@grovehub.com.br">contato@grovehub.com.br</SelectItem>
+                                            <SelectItem value="news@newsletter.grovehost.com.br">news@newsletter.grovehost.com.br</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -224,8 +266,9 @@ export default function NewCampaignPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">Todos os Contatos</SelectItem>
-                                            <SelectItem value="active">Clientes Ativos</SelectItem>
-                                            <SelectItem value="dev">Desenvolvedores</SelectItem>
+                                            {segments.map(s => (
+                                                <SelectItem key={s.$id} value={s.$id}>{s.name}</SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -293,11 +336,24 @@ export default function NewCampaignPage() {
                             <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
                                 {/* Editor Pane */}
                                 <div className="border-r flex flex-col">
-                                    <div className="flex bg-muted/20 p-2 gap-1 border-b">
+                                    <div className="flex bg-muted/20 p-2 gap-1 border-b items-center">
                                         <Button variant="ghost" size="sm" className="h-8 px-2 font-bold" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<b></b>' })}>B</Button>
                                         <Button variant="ghost" size="sm" className="h-8 px-2 italic" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<i></i>' })}>I</Button>
-                                        <Button variant="ghost" size="sm" className="h-8 px-2 underline" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<u></u>' })}>U</Button>
-                                        <div className="w-px h-6 bg-border mx-1 my-auto" />
+                                        <div className="w-px h-6 bg-border mx-1" />
+
+                                        <Select onValueChange={(v) => setCampaign({ ...campaign, content: campaign.content + v })}>
+                                            <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
+                                                <SelectValue placeholder="Inserir Variável" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="{{nome}}">Nome do Lead</SelectItem>
+                                                <SelectItem value="{{email}}">E-mail</SelectItem>
+                                                <SelectItem value="{{leadScore}}">Score</SelectItem>
+                                                <SelectItem value="{{unsubscribe_url}}">Link de Descadastro</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <div className="w-px h-6 bg-border mx-1" />
                                         <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<a href=""></a>' })}>link</Button>
                                     </div>
                                     <Textarea
@@ -348,8 +404,12 @@ export default function NewCampaignPage() {
                                         <dd className="mt-1 text-sm font-semibold">{campaign.subject || '(Sem assunto)'}</dd>
                                     </div>
                                     <div>
+                                        <dt className="text-sm font-medium text-muted-foreground">Pré-visualização (Preheader)</dt>
+                                        <dd className="mt-1 text-sm font-semibold italic text-muted-foreground">{campaign.preheader || '(Não definido)'}</dd>
+                                    </div>
+                                    <div>
                                         <dt className="text-sm font-medium text-muted-foreground">Público Estimado</dt>
-                                        <dd className="mt-1 text-sm font-semibold">1,245 inscritos</dd>
+                                        <dd className="mt-1 text-sm font-semibold">{campaign.segmentId === 'all' ? 'Todos os contatos' : segments.find(s => s.$id === campaign.segmentId)?.name || 'Público Geral'}</dd>
                                     </div>
                                     <div>
                                         <dt className="text-sm font-medium text-muted-foreground">Remetente</dt>
@@ -357,7 +417,9 @@ export default function NewCampaignPage() {
                                     </div>
                                     <div>
                                         <dt className="text-sm font-medium text-muted-foreground">Data Agendada</dt>
-                                        <dd className="mt-1 text-sm font-semibold italic text-muted-foreground">Envio Imediato</dd>
+                                        <dd className="mt-1 text-sm font-semibold">
+                                            {campaign.scheduledAt ? new Date(campaign.scheduledAt).toLocaleString('pt-BR') : 'Envio Imediato'}
+                                        </dd>
                                     </div>
                                 </dl>
                             </div>

@@ -9,6 +9,12 @@ export async function GET(req: NextRequest) {
     if (campaignId && contactId) {
         try {
             const { databases } = createAdminClient();
+
+            // Feature 15: Basic Geolocation Tracking
+            const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+            const country = req.headers.get('x-vercel-ip-country') || 'Unknown';
+            const city = req.headers.get('x-vercel-ip-city') || 'Unknown';
+
             // Log opening activity
             await databases.createDocument(
                 'default',
@@ -18,6 +24,7 @@ export async function GET(req: NextRequest) {
                     campaignId,
                     contactId,
                     type: 'open',
+                    metadata: JSON.stringify({ ip, country, city }),
                     timestamp: new Date().toISOString()
                 }
             );

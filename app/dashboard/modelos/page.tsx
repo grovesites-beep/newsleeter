@@ -31,6 +31,7 @@ const mockTemplates = [
 export default function TemplatesPage() {
     const [templates, setTemplates] = useState<EmailTemplate[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeCategory, setActiveCategory] = useState<string>('all');
 
     useEffect(() => {
         loadTemplates();
@@ -46,6 +47,12 @@ export default function TemplatesPage() {
             setLoading(false);
         }
     };
+
+    const categories = ['all', ...Array.from(new Set(templates.map(t => t.category).filter(Boolean)))];
+
+    const filteredTemplates = activeCategory === 'all'
+        ? templates
+        : templates.filter(t => t.category === activeCategory);
 
     return (
         <div className="space-y-6">
@@ -64,17 +71,34 @@ export default function TemplatesPage() {
                 </Button>
             </div>
 
+            {/* Category Filter - Feature 21 */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {categories.map((cat) => (
+                    <Button
+                        key={cat}
+                        variant={activeCategory === cat ? 'default' : 'outline'}
+                        size="sm"
+                        className="rounded-full capitalize whitespace-nowrap"
+                        onClick={() => setActiveCategory(cat!)}
+                    >
+                        {cat === 'all' ? 'Todos os Modelos' : cat}
+                    </Button>
+                ))}
+            </div>
+
             {loading ? (
                 <div className="flex h-64 items-center justify-center">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                 </div>
-            ) : templates.length > 0 ? (
+            ) : filteredTemplates.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {templates.map((template) => (
+                    {filteredTemplates.map((template) => (
                         <Card key={template.$id} className="group relative border-none shadow-md transition-all hover:shadow-lg">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
-                                    <Badge variant="secondary" className="mb-2 uppercase text-[10px] tracking-widest font-bold">Geral</Badge>
+                                    <Badge variant="secondary" className="mb-2 uppercase text-[10px] tracking-widest font-bold">
+                                        {template.category || 'Geral'}
+                                    </Badge>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -124,13 +148,10 @@ export default function TemplatesPage() {
                     <div className="bg-muted p-6 rounded-full mb-4">
                         <FileText className="h-10 w-10 text-muted-foreground/40" />
                     </div>
-                    <h3 className="text-lg font-bold">Nenhum modelo salvo</h3>
+                    <h3 className="text-lg font-bold">Nenhum modelo encontrado</h3>
                     <p className="max-w-xs text-sm text-muted-foreground mt-2">
-                        Salve designs que você usa com frequência para acelerar seu trabalho.
+                        Não encontramos nenhum modelo nesta categoria.
                     </p>
-                    <Button asChild className="mt-6" variant="outline">
-                        <Link href="/dashboard/modelos/novo">Criar meu primeiro modelo</Link>
-                    </Button>
                 </div>
             )}
         </div>
