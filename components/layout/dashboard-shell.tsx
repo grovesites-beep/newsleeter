@@ -43,18 +43,18 @@ import { Input } from '@/components/ui/input';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Contatos', href: '/dashboard/contacts', icon: Users },
-    { name: 'Segmentos', href: '/dashboard/segments', icon: Filter },
-    { name: 'Campanhas', href: '/dashboard/campaigns', icon: Mail },
-    { name: 'Automações', href: '/dashboard/automations', icon: Zap },
-    { name: 'Templates', href: '/dashboard/templates', icon: FileText },
-    { name: 'Relatórios', href: '/dashboard/reports', icon: BarChart3 },
-    { name: 'Logs de Atividade', href: '/dashboard/logs', icon: History },
+    { name: 'Contatos', href: '/dashboard/contatos', icon: Users },
+    { name: 'Segmentos', href: '/dashboard/segmentos', icon: Filter },
+    { name: 'Campanhas', href: '/dashboard/campanhas', icon: Mail },
+    { name: 'Automações', href: '/dashboard/automacoes', icon: Zap },
+    { name: 'Templates', href: '/dashboard/modelos', icon: FileText },
+    { name: 'Relatórios', href: '/dashboard/relatorios', icon: BarChart3 },
+    { name: 'Logs de Atividade', href: '/dashboard/atividades', icon: History },
 ];
 
 const secondaryNavigation = [
-    { name: 'Usuários', href: '/dashboard/users', icon: UserCog },
-    { name: 'Configurações', href: '/dashboard/settings', icon: Settings },
+    { name: 'Usuários', href: '/dashboard/usuarios', icon: UserCog },
+    { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

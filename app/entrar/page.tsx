@@ -9,9 +9,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
-export default function RegisterPage() {
-    const { register } = useAuth();
-    const [name, setName] = useState('');
+export default function LoginPage() {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,10 +19,10 @@ export default function RegisterPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            await register(email, password, name);
-            toast.success('Conta criada com sucesso!');
+            await login(email, password);
+            toast.success('Bem-vindo de volta!');
         } catch (error: any) {
-            toast.error('Erro ao criar conta: ' + (error.message || 'Tente novamente mais tarde.'));
+            toast.error('Erro ao entrar: ' + (error.message || 'Verifique suas credenciais.'));
         } finally {
             setLoading(false);
         }
@@ -35,22 +34,11 @@ export default function RegisterPage() {
                 <CardHeader className="space-y-1 text-center">
                     <CardTitle className="text-3xl font-bold tracking-tight">Newsletter Grove</CardTitle>
                     <CardDescription>
-                        Crie sua conta para começar a enviar newsletters profissionais
+                        Entre com seu e-mail e senha para acessar sua conta
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Nome Completo</Label>
-                            <Input
-                                id="name"
-                                type="text"
-                                placeholder="Seu nome"
-                                required
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">E-mail</Label>
                             <Input
@@ -63,13 +51,19 @@ export default function RegisterPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Senha</Label>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="password">Senha</Label>
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-sm font-medium text-primary hover:underline"
+                                >
+                                    Esqueceu a senha?
+                                </Link>
+                            </div>
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="No mínimo 8 caracteres"
                                 required
-                                minLength={8}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
@@ -77,12 +71,12 @@ export default function RegisterPage() {
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Criando conta...' : 'Criar Conta'}
+                            {loading ? 'Entrando...' : 'Entrar'}
                         </Button>
                         <div className="text-center text-sm text-muted-foreground">
-                            Já tem uma conta?{' '}
-                            <Link href="/login" className="font-medium text-primary hover:underline">
-                                Entrar
+                            Não tem uma conta?{' '}
+                            <Link href="/cadastro" className="font-medium text-primary hover:underline">
+                                Criar conta
                             </Link>
                         </div>
                     </CardFooter>

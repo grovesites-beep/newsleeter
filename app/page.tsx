@@ -34,9 +34,9 @@ export default function LandingPage() {
             <Link href="#pricing" className="hover:text-primary transition-colors">Preços</Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">Entrar</Link>
+            <Link href="/entrar" className="text-sm font-medium hover:text-primary transition-colors">Entrar</Link>
             <Button asChild size="sm" className="rounded-full px-6 shadow-md hover:shadow-lg transition-all">
-              <Link href="/register">Começar agora</Link>
+              <Link href="/cadastro">Começar agora</Link>
             </Button>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function LandingPage() {
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Button asChild size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20">
-                  <Link href="/register" className="flex items-center gap-2">
+                  <Link href="/cadastro" className="flex items-center gap-2">
                     Criar Minha Conta Grátis
                     <ArrowRight className="h-5 w-5" />
                   </Link>
@@ -232,7 +232,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button asChild size="lg" className="h-14 px-10 rounded-full shadow-lg">
-                <Link href="/register">Começar Gratuitamente</Link>
+                <Link href="/cadastro">Começar Gratuitamente</Link>
               </Button>
               <Button variant="ghost" size="lg" className="h-14 px-10 rounded-full">
                 Falar com especialista
@@ -266,9 +266,9 @@ export default function LandingPage() {
               <h5 className="font-bold mb-4">Plataforma</h5>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="#features" className="hover:text-primary transition-colors">Funcionalidades</Link></li>
-                <li><Link href="/templates" className="hover:text-primary transition-colors">Templates</Link></li>
-                <li><Link href="/reports" className="hover:text-primary transition-colors">Relatórios</Link></li>
-                <li><Link href="/register" className="hover:text-primary transition-colors">Preços</Link></li>
+                <li><Link href="/dashboard/modelos" className="hover:text-primary transition-colors">Templates</Link></li>
+                <li><Link href="/dashboard/relatorios" className="hover:text-primary transition-colors">Relatórios</Link></li>
+                <li><Link href="/cadastro" className="hover:text-primary transition-colors">Preços</Link></li>
               </ul>
             </div>
             <div>

@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await account.deleteSession('current');
             setUser(null);
-            router.push('/login');
+            router.push('/entrar');
         } catch (error) {
             console.error(error);
         } finally {

@@ -34,10 +34,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <Button asChild variant="outline">
-                        <Link href="/dashboard/campaigns/new">Agendar Campanha</Link>
+                        <Link href="/dashboard/campanhas/nova">Agendar Campanha</Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/dashboard/campaigns/new">Nova Campanha</Link>
+                        <Link href="/dashboard/campanhas/nova">Nova Campanha</Link>
                     </Button>
                 </div>
             </div>

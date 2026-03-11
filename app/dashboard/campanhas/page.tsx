@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -83,7 +84,7 @@ export default function CampaignsPage() {
                     </p>
                 </div>
                 <Button asChild className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
-                    <Link href="/dashboard/campaigns/new">
+                    <Link href="/dashboard/campanhas/nova">
                         <Plus className="mr-2 h-4 w-4" />
                         Nova Campanha
                     </Link>
@@ -246,7 +247,7 @@ export default function CampaignsPage() {
                                 Você ainda não criou nenhuma campanha ou sua busca não retornou resultados.
                             </p>
                             <Button asChild className="mt-6" variant="outline">
-                                <Link href="/dashboard/campaigns/new">Criar minha primeira campanha</Link>
+                                <Link href="/dashboard/campanhas/nova">Criar minha primeira campanha</Link>
                             </Button>
                         </div>
                     )}
@@ -254,8 +255,4 @@ export default function CampaignsPage() {
             </Card>
         </div>
     );
-}
-
-function cn(...classes: any[]) {
-    return classes.filter(Boolean).join(' ');
 }
