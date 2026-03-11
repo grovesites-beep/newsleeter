@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function UnsubscribePage() {
+import { Suspense } from 'react';
+
+function UnsubscribeContent() {
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const email = searchParams.get('email');
@@ -104,5 +106,19 @@ export default function UnsubscribePage() {
                 </CardFooter>
             </Card>
         </div>
+    );
+}
+
+export default function UnsubscribePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
+                <Card className="w-full max-w-md shadow-lg border-none p-8 flex items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                </Card>
+            </div>
+        }>
+            <UnsubscribeContent />
+        </Suspense>
     );
 }
