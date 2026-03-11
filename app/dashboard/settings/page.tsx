@@ -13,10 +13,12 @@ import {
     Mail,
     ShieldCheck,
     Bell,
+    Plus,
     Save,
     ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
@@ -176,5 +178,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-import { Plus } from 'lucide-react';
