@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -268,11 +269,11 @@ export default function NewCampaignPage() {
                                         <div className="w-px h-6 bg-border mx-1 my-auto" />
                                         <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setCampaign({ ...campaign, content: campaign.content + '<a href=""></a>' })}>link</Button>
                                     </div>
-                                    <textarea
-                                        className="flex-1 w-full p-6 resize-none border-none bg-transparent focus:ring-0 font-mono text-sm leading-relaxed"
+                                    <Textarea
+                                        className="flex-1 w-full p-6 resize-none border-none bg-transparent focus-visible:ring-0 font-mono text-sm leading-relaxed min-h-[400px]"
                                         placeholder="Use tags HTML para formatação..."
                                         value={campaign.content}
-                                        onChange={(e) => setCampaign({ ...campaign, content: e.target.value })}
+                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCampaign({ ...campaign, content: e.target.value })}
                                     />
                                 </div>
                                 {/* Preview Pane */}
