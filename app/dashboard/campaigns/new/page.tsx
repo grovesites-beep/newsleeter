@@ -27,8 +27,31 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+
+const templates = [
+    {
+        id: '1',
+        name: 'Newsletter Semanal',
+        content: '<h1 style="color: #6366f1;">Newsletter Semanal</h1><p>Olá {{nome}},</p><p>Aqui estão as novidades da semana:</p><ul><li>Novidade 1</li><li>Novidade 2</li></ul><p>Até a próxima!</p>'
+    },
+    {
+        id: '2',
+        name: 'Promoção Relâmpago',
+        content: '<div style="background-color: #fce7f3; padding: 20px; border-radius: 10px; text-align: center;"><h1 style="color: #db2777;">OFERTA LIMITADA!</h1><p style="font-size: 18px;">Ganhe 50% de desconto usando o cupom <b>GROVE50</b></p><br/><a href="#" style="background-color: #db2777; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">Aproveitar Agora</a></div>'
+    }
+];
+
 export default function NewCampaignPage() {
     const [step, setStep] = useState('settings');
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [campaign, setCampaign] = useState({
         name: '',
         subject: '',
@@ -39,6 +62,12 @@ export default function NewCampaignPage() {
 
     const handleSave = () => {
         toast.success('Campanha salva como rascunho!');
+    };
+
+    const applyTemplate = (content: string) => {
+        setCampaign({ ...campaign, content });
+        setIsTemplateModalOpen(false);
+        toast.success('Template aplicado com sucesso!');
     };
 
     return (
@@ -151,10 +180,37 @@ export default function NewCampaignPage() {
                                 <CardDescription>Crie o visual do seu e-mail com suporte a HTML simples.</CardDescription>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm" className="rounded-full">
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Templates
-                                </Button>
+                                <Dialog open={isTemplateModalOpen} onOpenChange={setIsTemplateModalOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm" className="rounded-full">
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            Templates
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-3xl">
+                                        <DialogHeader>
+                                            <DialogTitle>Selecionar Template</DialogTitle>
+                                            <DialogDescription>
+                                                Escolha um ponto de partida profissional para sua campanha.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                                            {templates.map((t) => (
+                                                <div
+                                                    key={t.id}
+                                                    className="group cursor-pointer rounded-xl border p-4 hover:border-primary hover:bg-primary/5 transition-all"
+                                                    onClick={() => applyTemplate(t.content)}
+                                                >
+                                                    <div className="aspect-video w-full rounded-lg bg-muted flex items-center justify-center mb-3">
+                                                        <FileText className="h-8 w-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                    </div>
+                                                    <h4 className="font-bold">{t.name}</h4>
+                                                    <p className="text-xs text-muted-foreground">Clique para aplicar este design ao seu editor.</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
