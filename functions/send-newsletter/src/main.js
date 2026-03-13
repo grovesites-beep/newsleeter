@@ -31,7 +31,7 @@ export default async ({ req, res, log, error }) => {
             return res.json({ success: false, error: 'Campaign already sent' }, 400);
         }
 
-        // 2. Determine Audience
+        // 2. Determine Audience and Fetch ALL Contacts with Pagination
         const queries = [Query.equal('status', 'active')];
 
         // Feature 10: Dynamic Segmentation
@@ -48,9 +48,19 @@ export default async ({ req, res, log, error }) => {
             }
         }
 
-        const contacts = await databases.listDocuments(DATABASE_ID, CONTACTS_COLLECTION_ID, queries);
+        let allContacts = [];
+        let offset = 0;
+        const LIMIT = 100;
 
-        if (contacts.total === 0) {
+        while (true) {
+            const batchQueries = [...queries, Query.limit(LIMIT), Query.offset(offset)];
+            const response = await databases.listDocuments(DATABASE_ID, CONTACTS_COLLECTION_ID, batchQueries);
+            allContacts = allContacts.concat(response.documents);
+            if (response.documents.length < LIMIT) break;
+            offset += LIMIT;
+        }
+
+        if (allContacts.length === 0) {
             return res.json({ success: false, error: 'No contacts found for this audience' }, 400);
         }
 
@@ -65,7 +75,7 @@ export default async ({ req, res, log, error }) => {
         let successCount = 0;
         let failCount = 0;
 
-        for (const contact of contacts.documents) {
+        for (const contact of allContacts) {
             try {
                 // Feature 6: Advanced Personalization
                 let personalizedContent = campaign.content

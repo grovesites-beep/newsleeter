@@ -1,4 +1,6 @@
-import { Client, Functions, InputFile } from 'node-appwrite';
+import { Client, Functions } from 'node-appwrite';
+import { InputFile } from 'node-appwrite/file';
+import fs from 'fs';
 
 const client = new Client()
     .setEndpoint('https://appwrite.grovehub.com.br/v1')
@@ -8,21 +10,26 @@ const client = new Client()
 const functions = new Functions(client);
 
 async function deploy() {
-    console.log('Iniciando deploy do código da função...');
+    console.log('--- Iniciando Deploy de send-newsletter ---');
     try {
+        if (!fs.existsSync('function.tar.gz')) {
+            throw new Error('Arquivo function.tar.gz não encontrado!');
+        }
+
+        const buffer = fs.readFileSync('function.tar.gz');
+        console.log(`Lido function.tar.gz (${buffer.length} bytes)`);
+
         const deployment = await functions.createDeployment(
             'send-newsletter',
-            'src/main.js',
-            InputFile.fromPath('function.tar.gz', 'function.tar.gz'),
+            InputFile.fromBuffer(buffer, 'function.tar.gz'),
             true,
+            'src/main.js',
             'npm install'
         );
-        console.log('Deploy realizado com sucesso! ID:', deployment.$id);
+        console.log('DEPLOY REALIZADO COM SUCESSO! ID:', deployment.$id);
     } catch (e) {
-        console.error('--- ERRO DETALHADO NO DEPLOY ---');
-        console.error('Mensagem:', e.message);
-        console.error('Código:', e.code);
-        console.error('StackTrace:', e.stack);
+        console.error('FALHA NO DEPLOY:');
+        console.error(e);
     }
 }
 

@@ -210,9 +210,11 @@ export default function CampaignsPage() {
                                             <div className="flex items-center gap-3 pt-1 text-[11px] text-muted-foreground font-medium uppercase tracking-tighter">
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="h-3 w-3" />
-                                                    {campaign.sentDate
-                                                        ? format(new Date(campaign.sentDate), "dd 'de' MMM, HH:mm", { locale: ptBR })
-                                                        : 'Criado em ' + format(new Date(campaign.$createdAt), "dd/MM/yyyy")
+                                                    {campaign.status === 'scheduled' && campaign.scheduledAt
+                                                        ? `Agendado para ${format(new Date(campaign.scheduledAt), "dd 'de' MMM, HH:mm", { locale: ptBR })}`
+                                                        : campaign.sentDate
+                                                            ? format(new Date(campaign.sentDate), "dd 'de' MMM, HH:mm", { locale: ptBR })
+                                                            : 'Criado em ' + format(new Date(campaign.$createdAt), "dd/MM/yyyy")
                                                     }
                                                 </span>
                                                 <span className="w-1 h-1 rounded-full bg-border" />
